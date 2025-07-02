@@ -116,7 +116,7 @@ class KimiAudio(object):
         valid_text_length = 0
         valid_audio_length = 0
         first_time_flag = True
-        temp_start = 0#暂时性生成到了哪里
+        temp_start = 0#记录暂时性生成到了哪里
         temp_time = time.time()
         for i in tqdm.tqdm(#生成tokens，长度为max_new_tokens
             range(max_new_tokens), desc="Generating tokens", disable=False
@@ -159,12 +159,14 @@ class KimiAudio(object):
             previous_audio_tokens[i : i + 1] = next_audio_token
             audio_stream_is_finished = next_audio_token.item() in self.eod_ids
             ### my code ###
-            if ((i%number_of_tokens_to_a_wav==0 and i !=0 ) or audio_stream_is_finished):
+            if ((i%number_of_tokens_to_a_wav==0 and i !=0 ) or audio_stream_is_finished):#判断当audio生成完毕时或token数目到了该生成一次wav文件的时候
+                #过滤tokens，把没用的删除
                 generated_wav_tokens = [t for t in previous_audio_tokens[temp_start:i] if t >= self.kimia_token_offset]
                 generated_wav_tokens = torch.tensor(generated_wav_tokens).unsqueeze(0)
                 generated_wav_tokens = generated_wav_tokens - self.kimia_token_offset
+                #生成audio
                 generated_wav = self.detokenize_audio(generated_wav_tokens)
-                if(not os.path.exists(output_dir+str(number_of_tokens_to_a_wav))):
+                if(not os.path.exists(output_dir+str(number_of_tokens_to_a_wav))):#生成的文件夹
                     os.mkdir(output_dir+str(number_of_tokens_to_a_wav))
                 if(not os.path.exists(output_dir+str(number_of_tokens_to_a_wav)+"/output")):
                     os.mkdir(output_dir+str(number_of_tokens_to_a_wav)+"/output")
@@ -174,13 +176,13 @@ class KimiAudio(object):
                         24000,
                         )
                 temp_start = i
-                if(first_time_flag):
+                if(first_time_flag):#记录是否是第一次生成，如果是需要记录从投入视频到第一个token产出的时间
                     temp_time = time.time()
                     print("-"*20)
                     print("from start to end:",start_time - temp_time)
                     print("-"*20)
                     first_time_flag = False
-                else:
+                else:#记录当前token产生的时间
                     print("-"*20)
                     now_time = time.time()
                     print(str(i)+" audio cost time:",now_time-temp_time)
