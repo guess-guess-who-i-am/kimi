@@ -5,7 +5,6 @@ import argparse
 import flash_attn
 import torch
 import time
-#todo:他是把音频先过一遍大模型再当成token过一遍大模型，看一看是不是变成文字，看看有没有硬性的时间指标
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, default="moonshotai/Kimi-Audio-7B-Instruct")
@@ -26,7 +25,7 @@ if __name__ == "__main__":
         "text_repetition_penalty": 1.0,
         "text_repetition_window_size": 16,
     }
-
+    # kimi可实现加入prompt
     # messages = [
     #     {"role": "user", "message_type": "text", "content": "请将音频内容转换为文字。"},
     #     {
@@ -66,7 +65,7 @@ if __name__ == "__main__":
         24000,
     )
     
-    # audio2audio
+    # audio2audio做实验的时候的配置，让他从10个token生成一次audio到150个token生成一次audio。
     i=10
     while(i<150):
         messages = [
@@ -90,46 +89,8 @@ if __name__ == "__main__":
         )
         i+=10
         print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-    # # audio2audio
-    # messages = [
-    #     {
-    #         "role": "user",
-    #         "message_type": "audio",
-    #         "content": "my_test/hitc_q.wav",
-    #     }
-    # ]
-    # start = time.time()
-    # wav, text = model.generate(messages, **sampling_params, output_type="both")
-    # end = time.time()
-    # print("-"*20)
-    # print("audio2audio_cq:",end-start)
-    # print("-"*20)
-    # print(">>> output text: ", text)
-    # sf.write(
-    #     os.path.join(output_dir, "hitc_q_output.wav"),
-    #     wav.detach().cpu().view(-1).numpy(),
-    #     24000,
-    # )
 
-    # messages = [
-    #     {
-    #         "role": "user",
-    #         "message_type": "audio",
-    #         "content": "my_test/hits_q.wav",
-    #     }
-    # ]
-    # start = time.time()
-    # wav, text = model.generate(messages, **sampling_params, output_type="both")
-    # end = time.time()
-    # print("-"*20)
-    # print("audio2audio_sq:",end-start)
-    # print("-"*20)
-    # print(">>> output text: ", text)
-    # sf.write(
-    #     os.path.join(output_dir, "hits_q_output.wav"),
-    #     wav.detach().cpu().view(-1).numpy(),
-    #     24000,
-    # )
+    #kimi可以实现上一个音频的结果投入下一个音频一起生成，不过会相对来说更慢
     # audio2audio multiturn
     # messages = [
     #     {
@@ -160,33 +121,3 @@ if __name__ == "__main__":
     #     24000,
     # )
     # print(">>> output text: ", text)
-"""
-    
-
-
-    messages = [
-        {
-            "role": "user",
-            "message_type": "audio",
-            "content": "test_audios/multiturn/case2/multiturn_q1.wav",
-        },
-        {
-            "role": "assistant",
-            "message_type": "audio-text",
-            "content": ["test_audios/multiturn/case2/multiturn_a1.wav", "当然可以，这很简单。一二三四五六七八九十。"]
-        },
-        {
-            "role": "user",
-            "message_type": "audio",
-            "content": "test_audios/multiturn/case2/multiturn_q2.wav",
-        }
-    ]
-    wav, text = model.generate(messages, **sampling_params, output_type="both")
-    sf.write(
-        os.path.join(output_dir, "case_2_multiturn_a2.wav"),
-        wav.detach().cpu().view(-1).numpy(),
-        24000,
-    )
-    print(">>> output text: ", text)
-
-    """
